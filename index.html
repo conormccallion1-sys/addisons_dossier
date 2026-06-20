@@ -166,10 +166,66 @@
     .grid2{grid-template-columns:1fr}
     .cov .angle{width:150px}
   }
+
+  /* ---- Scroll progress bar ---- */
+  #progress-bar{position:fixed;top:0;left:0;height:3px;
+    background:linear-gradient(90deg,var(--teal2),var(--gold));
+    width:0;z-index:200;pointer-events:none;transition:width .08s linear}
+
+  /* ---- Back to top ---- */
+  #back-top{position:fixed;bottom:28px;right:28px;width:44px;height:44px;
+    background:var(--teal);color:#fff;border:none;border-radius:50%;cursor:pointer;
+    font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 20px rgba(20,40,45,.22);transition:.25s;z-index:100;
+    opacity:0;transform:translateY(12px);pointer-events:none}
+  #back-top.visible{opacity:1;transform:none;pointer-events:auto}
+  #back-top:hover{background:var(--teal2);transform:translateY(-4px)}
+
+  /* ---- Evidence search ---- */
+  .search-bar{position:relative;margin:0 0 20px}
+  .search-bar input{width:100%;padding:10px 38px 10px 14px;border:1.5px solid var(--line);
+    background:var(--sheet2);font-family:var(--sans);font-size:13.5px;color:var(--ink);
+    outline:none;transition:.2s}
+  .search-bar input:focus{border-color:var(--teal2);background:#fff}
+  .search-bar::after{content:"⌕";position:absolute;right:13px;top:50%;transform:translateY(-50%);
+    color:var(--faint);font-size:18px;pointer-events:none}
+  .no-results{font-family:var(--sans);color:var(--muted);font-size:14px;
+    padding:18px 0;font-style:italic;text-align:center}
+  .angle-section.hidden{display:none}
+
+  /* ---- Accordion controls ---- */
+  .acct-controls{display:flex;gap:8px;margin-bottom:16px}
+  .acct-btn{font-family:var(--sans);font-size:11.5px;color:var(--teal2);background:none;
+    border:1px solid var(--line);padding:5px 13px;cursor:pointer;transition:.15s}
+  .acct-btn:hover{border-color:var(--teal2);background:rgba(30,75,87,.05)}
+
+  /* ---- Tab visited state ---- */
+  .tab.visited:not(.active){color:var(--teal)}
+  .tab.visited:not(.active)::after{content:"";position:absolute;left:50%;bottom:-1px;
+    transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--teal2);opacity:.5}
+
+  /* ---- Print button ---- */
+  #print-btn{font-family:var(--sans);font-size:10.5px;color:var(--muted);background:none;
+    border:1px solid var(--line);padding:4px 10px;cursor:pointer;transition:.15s;margin-top:8px;
+    display:block;text-align:right}
+  #print-btn:hover{border-color:var(--teal2);color:var(--teal)}
+
+  /* ---- Focus ring ---- */
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+  /* ---- Print ---- */
+  @media print{
+    #progress-bar,#back-top,nav.tabs,#print-btn,.acct-controls,.search-bar{display:none!important}
+    .panel-view{display:block!important;animation:none!important;page-break-before:always}
+    .panel-view:first-child{page-break-before:avoid}
+    .wrap{box-shadow:none;border:none}
+    .construct{page-break-inside:avoid}
+  }
 </style>
 </head>
 <body>
 
+<div id="progress-bar" role="progressbar" aria-label="Page scroll progress"></div>
 <header class="top">
   <div class="top-inner">
     <div class="brand">
@@ -177,7 +233,7 @@
       <h1>Addison's Disease &amp; the MRes Project</h1>
       <p>Health-psychology landscape, evidence map &amp; project framing</p>
     </div>
-    <div class="top-meta">Compiled for Conor McCallion<br>Evidence generated 2026-06-16</div>
+    <div class="top-meta">Compiled for Conor McCallion<br>Evidence generated 2026-06-16<button id="print-btn" onclick="window.print()">⎙ Print / Save PDF</button></div>
   </div>
 </header>
 
@@ -416,6 +472,11 @@
     <span class="maturity m-amber">emerging</span>
     <span class="maturity m-red">thin / opportunity</span></p>
 
+  <div class="acct-controls">
+    <button class="acct-btn" id="expand-all">Expand all</button>
+    <button class="acct-btn" id="collapse-all">Collapse all</button>
+  </div>
+
   <details class="construct" open=""><summary>1 · Health-related quality of life &amp; PROMs <span class="maturity m-green">developed</span></summary>
     <div class="body">
       <p>The most developed strand, and the natural anchor for health-psychology work.</p>
@@ -651,6 +712,9 @@
   <table class="cov"><tbody id="coverage-rows"></tbody></table>
 
   <h3 style="margin-top:34px">Research by angle</h3>
+  <div class="search-bar">
+    <input type="search" id="rec-search" placeholder="Search titles, journals, years…" aria-label="Search evidence records">
+  </div>
   <div id="angle-sections"></div>
 </section>
 
@@ -765,7 +829,7 @@
   angles.forEach(g=>{
     let lis = g.recs.map(r=>`<li><span class="yr">${r.y}</span><a href="${r.u}" target="_blank" rel="noopener">${r.t}</a><div class="meta">${r.m}</div></li>`).join('');
     sec.insertAdjacentHTML('beforeend',
-      `<details class="construct"><summary>${g.title} <span class="count">${g.recs.length}</span></summary><div class="body"><ul class="records">${lis}</ul></div></details>`);
+      `<details class="construct angle-section"><summary>${g.title} <span class="count">${g.recs.length}</span></summary><div class="body"><ul class="records">${lis}</ul></div></details>`);
   });
 
   const compBody = document.getElementById('comp-rows');
@@ -793,5 +857,108 @@
   animateBars();
 </script>
 
+<button id="back-top" title="Back to top" aria-label="Back to top">↑</button>
+
+<script>
+  /* ---- Scroll progress + back-to-top ---- */
+  const progressBar = document.getElementById('progress-bar');
+  const backTop = document.getElementById('back-top');
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    progressBar.style.width = (total > 0 ? Math.min(scrolled / total * 100, 100) : 0) + '%';
+    backTop.classList.toggle('visible', scrolled > 400);
+  }, {passive: true});
+  backTop.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
+
+  /* ---- Visited tab tracking ---- */
+  const allTabs = document.querySelectorAll('.tab');
+  allTabs.forEach(t => t.addEventListener('click', () => t.classList.add('visited')));
+  document.querySelector('.tab.active')?.classList.add('visited');
+
+  /* ---- Keyboard navigation for tabs ---- */
+  document.querySelector('nav.tabs').addEventListener('keydown', e => {
+    const tabArr = [...allTabs];
+    const cur = tabArr.findIndex(t => t.classList.contains('active'));
+    if (e.key === 'ArrowRight' && cur < tabArr.length - 1) tabArr[cur + 1].click();
+    if (e.key === 'ArrowLeft' && cur > 0) tabArr[cur - 1].click();
+  });
+
+  /* ---- Animated stat counters ---- */
+  function animateCounter(el, target, duration) {
+    const start = performance.now();
+    const update = now => {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(eased * target);
+      if (t < 1) requestAnimationFrame(update);
+      else el.textContent = target;
+    };
+    requestAnimationFrame(update);
+  }
+  const cardNums = document.querySelectorAll('.card .num');
+  let countersRun = false;
+  const counterObs = new IntersectionObserver(entries => {
+    if (entries.some(e => e.isIntersecting) && !countersRun) {
+      countersRun = true;
+      cardNums.forEach(el => {
+        const val = parseInt(el.textContent, 10);
+        if (!isNaN(val)) animateCounter(el, val, 1200);
+      });
+    }
+  }, {threshold: 0.3});
+  if (cardNums.length) counterObs.observe(cardNums[0]);
+
+  /* ---- Expand / Collapse all accordions ---- */
+  const expandBtn = document.getElementById('expand-all');
+  const collapseBtn = document.getElementById('collapse-all');
+  if (expandBtn) {
+    expandBtn.addEventListener('click', () => {
+      document.querySelectorAll('#core .construct').forEach(d => d.open = true);
+    });
+  }
+  if (collapseBtn) {
+    collapseBtn.addEventListener('click', () => {
+      document.querySelectorAll('#core .construct').forEach(d => d.open = false);
+    });
+  }
+
+  /* ---- Evidence map search ---- */
+  const searchInput = document.getElementById('rec-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.trim().toLowerCase();
+      const sections = document.querySelectorAll('#angle-sections .angle-section');
+      let anyVisible = false;
+      sections.forEach(sec => {
+        if (!q) { sec.classList.remove('hidden'); anyVisible = true; return; }
+        const items = sec.querySelectorAll('li');
+        let sectionHit = false;
+        items.forEach(li => {
+          const txt = li.textContent.toLowerCase();
+          const match = txt.includes(q);
+          li.style.display = match ? '' : 'none';
+          if (match) sectionHit = true;
+        });
+        sec.classList.toggle('hidden', !sectionHit);
+        if (sectionHit) anyVisible = true;
+      });
+      let noRes = document.getElementById('search-no-results');
+      if (!anyVisible && q) {
+        if (!noRes) {
+          noRes = document.createElement('p');
+          noRes.id = 'search-no-results';
+          noRes.className = 'no-results';
+          noRes.textContent = 'No records match "' + searchInput.value + '"';
+          document.getElementById('angle-sections').before(noRes);
+        } else {
+          noRes.textContent = 'No records match "' + searchInput.value + '"';
+        }
+      } else if (noRes) {
+        noRes.remove();
+      }
+    });
+  }
+</script>
 
 </body></html>
